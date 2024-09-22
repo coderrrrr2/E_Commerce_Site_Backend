@@ -1,3 +1,5 @@
+
+
 const db = require('../util/database');
 
 const Cart = require('./cart');
@@ -12,19 +14,24 @@ module.exports = class Product {
   }
 
   save() {
-    return db.execute(
-      'INSERT INTO products (title, price, imageUrl, description) VALUES (?, ?, ?, ?)',
+    return db.query(
+      `INSERT INTO products (title, price, imageurl, description) VALUES ($1, $2, $3, $4)`,
       [this.title, this.price, this.imageUrl, this.description]
+      
     );
   }
 
-  static deleteById(id) {}
+  static deleteById(id) {
+    return db.query(`DELETE FROM products WHERE id = $1`, [id]);
+  }
 
   static fetchAll() {
-    return db.execute('SELECT * FROM products');
+  
+    return db.query('SELECT * FROM products');
   }
 
   static findById(id) {
-    return db.execute('SELECT * FROM products WHERE products.id = ?', [id]);
+
+    return db.query(`SELECT * FROM products WHERE products.id = $1`,[id]);
   }
 };
