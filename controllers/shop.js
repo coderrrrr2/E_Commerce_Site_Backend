@@ -2,20 +2,31 @@ const Product = require('../models/product');
 const Cart = require('../models/cart');
 
 exports.getProducts = async(req, res, next) => {
-let data =  await  Product.fetchAll();
-console.log("my first log",data);
+try{
+  let data =  await  Product.findAll();
+
+res.render('shop/product-list', {
+  prods: data,
+  pageTitle: 'All Products',
+  path: '/products'
+});
+}catch(err){
+  console.error(err);
+  res.status(500).send('Internal Server Error'); // Handle error appropriately
+}
+
     
 };
 
 exports.getProduct = async(req, res, next) => {
+console.log('shop get products is callledd');
   try{
     const prodId = req.params.productId;
-  const result =  await Product.findById(prodId);
-  const rows = result.rows;
-  console.log("get product rows", rows);
+  const result =  await Product.findByPk(prodId);
+
   res.render('shop/product-detail', {
-    product: rows[0],
-    pageTitle: rows[0].pageTitle,
+    product: result,
+    pageTitle: result.pageTitle,
     path: '/products'
   });
   }
@@ -27,12 +38,9 @@ exports.getProduct = async(req, res, next) => {
 
 exports.getIndex = async (req, res, next) => {
   try {
-    const result = await Product.fetchAll(); 
-    const rows = result.rows; 
-
-    
+    const result = await Product.findAll(); 
     res.render('shop/index', {
-      prods: rows, 
+      prods: result, 
       pageTitle: 'Shop',
       path: '/'
     });
@@ -76,12 +84,16 @@ try{
 }
 };
 
-exports.postCartDeleteProduct = (req, res, next) => {
+exports.postCartDeleteProduct = async(req, res, next) => {
+try{
   const prodId = req.body.productId;
-  Product.findById(prodId, product => {
-    Cart.deleteProduct(prodId, product.price);
-    res.redirect('/cart');
-  });
+  const  product = await  Product.findById(prodId);
+  Cart.deleteProduct(prodId, product.price);
+  res.redirect('/cart');
+}catch(err){
+  console.error(err);
+  res.status(500).send('Internal Server Error'); // Handle error appropriately
+}
 };
 
 exports.getOrders = (req, res, next) => {

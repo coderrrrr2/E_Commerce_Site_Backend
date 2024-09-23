@@ -9,17 +9,23 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = (req, res, next) => {
-  const title = req.body.title;
+  try{
+    const title = req.body.title;
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product(null, title, imageUrl, description, price);
-  product
-    .save()
-    .then(() => {
-      res.redirect('/');
-    })
-    .catch(err => console.log(err));
+  Product.create({
+    title: title,
+    price: price,
+    imageUrl: imageUrl,
+    description: description
+  });
+ res.redirect('/');
+  }
+    catch(err){
+      console.error(err);
+      res.status(500).send('Internal Server Error'); // Handle error appropriately
+    }
 };
 
 exports.getEditProduct = (req, res, next) => {
@@ -28,17 +34,17 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect('/');
   }
   const prodId = req.params.productId;
-  Product.findById(prodId, product => {
-    if (!product) {
-      return res.redirect('/');
-    }
-    res.render('admin/edit-product', {
-      pageTitle: 'Edit Product',
-      path: '/admin/edit-product',
-      editing: editMode,
-      product: product
-    });
-  });
+ const product =  Product.findByPk(prodId);
+
+ if (!product) {
+  return res.redirect('/');
+}
+res.render('admin/edit-product', {
+  pageTitle: 'Edit Product',
+  path: '/admin/edit-product',
+  editing: editMode,
+  product: product
+});
 };
 
 exports.postEditProduct = (req, res, next) => {
@@ -59,17 +65,21 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll(products => {
-    res.render('admin/products', {
-      prods: products,
-      pageTitle: 'Admin Products',
-      path: '/admin/products'
-    });
+
+try{
+  res.render('admin/products', {
+    prods: products,
+    pageTitle: 'Admin Products',
+    path: '/admin/products'
   });
+}catch(err){
+  console.error(err);
+  res.status(500).send('Internal Server Error');
+}
 };
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.deleteById(prodId);
+  Product.drop(prodId);
   res.redirect('/admin/products');
 };
