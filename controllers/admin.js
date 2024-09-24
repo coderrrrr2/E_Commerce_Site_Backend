@@ -8,13 +8,16 @@ exports.getAddProduct = (req, res, next) => {
   });
 };
 
-exports.postAddProduct = (req, res, next) => {
+
+exports.postAddProduct = async(req, res, next) => {
   try{
     const title = req.body.title;
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  Product.create({
+  await req.user.createProduct
+   ({
+
     title: title,
     price: price,
     imageUrl: imageUrl,
@@ -28,13 +31,14 @@ exports.postAddProduct = (req, res, next) => {
     }
 };
 
-exports.getEditProduct = (req, res, next) => {
+
+exports.getEditProduct = async(req, res, next) => {
   const editMode = req.query.edit;
   if (!editMode) {
     return res.redirect('/');
   }
   const prodId = req.params.productId;
- const product =  Product.findByPk(prodId);
+ const product = await  Product.findByPk(prodId);
 
  if (!product) {
   return res.redirect('/');
@@ -47,26 +51,33 @@ res.render('admin/edit-product', {
 });
 };
 
-exports.postEditProduct = (req, res, next) => {
+
+
+exports.postEditProduct = async(req, res, next) => {
+try{
   const prodId = req.body.productId;
   const updatedTitle = req.body.title;
   const updatedPrice = req.body.price;
   const updatedImageUrl = req.body.imageUrl;
   const updatedDesc = req.body.description;
-  const updatedProduct = new Product(
-    prodId,
-    updatedTitle,
-    updatedImageUrl,
-    updatedDesc,
-    updatedPrice
-  );
-  updatedProduct.save();
+ const product =await  Product.findByPk(prodId);
+  product.title = updatedTitle;
+  product.price = updatedPrice;
+  product.imageUrl = updatedImageUrl;
+  product.description = updatedDesc;
+  product.save();
   res.redirect('/admin/products');
+}catch(err){
+  console.error(err);
+  res.status(500).send('Internal Server Error');
+}
 };
 
-exports.getProducts = (req, res, next) => {
 
+
+exports.getProducts = async(req, res, next) => {
 try{
+  const products = await  Product.findAll();
   res.render('admin/products', {
     prods: products,
     pageTitle: 'Admin Products',
@@ -78,8 +89,8 @@ try{
 }
 };
 
-exports.postDeleteProduct = (req, res, next) => {
+exports.postDeleteProduct = async(req, res, next) => {
   const prodId = req.body.productId;
-  Product.drop(prodId);
+  await Product.destroy({where: {id: prodId}});
   res.redirect('/admin/products');
 };
