@@ -32,7 +32,7 @@ exports.getProduct = async(req, res, next) => {
   }
   catch (err) {
     console.error(err);
-    res.status(500).send('Internal Server Error'); // Handle error appropriately
+    res.status(500).send(err.toString()); // Handle error appropriately
   }
 };
 
@@ -54,10 +54,18 @@ exports.getIndex = async (req, res, next) => {
 exports.getCart = (req, res, next) => {
    req.user.getCart()
 .then(cart => {
-  console.log(cart);
-}).catch(err=>{
+return cart.getProducts();
+}).then(cartProducts => {
+  res.render('shop/cart', {
+          path: '/cart',
+          pageTitle: 'Your Cart',
+          products: cartProducts
+        });
+  })
+.catch(err=>{
   console.error(err);
-});  // Cart.getCart(cart => {
+}); 
+ // Cart.getCart(cart => {
   //   Product.fetchAll(products => {
   //     const cartProducts = [];
   //     for (product of products) {
@@ -77,12 +85,33 @@ exports.getCart = (req, res, next) => {
   // });
 };
 
-exports.postCart =  async(req, res, next) => {
+exports.postCart =  (req, res, next) => {
 try{
   const prodId = req.body.productId;
- const  product = await  Product.findById(prodId);
- Cart.addProduct(prodId, product.price);
+  var fetchedCart ;
+  let newQuantity = 1;
+
+req.user.getCart().then(cart => {
+  fetchedCart = cart;
+   
+ return cart.getProducts({where: {id: prodId}});
+}).then(products => {
+let product;
+newQuantity = 1;
+
+if(products.length > 0){
+  product = products[0];
+}
+if(product){
+  ///
+}
+return Product.findByPk(prodId);
+}).then(product => {
+ 
+  fetchedCart.addProduct(product, {through: {quantity: newQuantity}});
   res.redirect('/cart');
+
+});
 }catch(err){
   console.error(err);
   res.status(500).send('Internal Server Error'); // Handle error appropriately
@@ -92,8 +121,7 @@ try{
 exports.postCartDeleteProduct = async(req, res, next) => {
 try{
   const prodId = req.body.productId;
-  const  product = await  Product.findById(prodId);
-  Cart.deleteProduct(prodId, product.price);
+
   res.redirect('/cart');
 }catch(err){
   console.error(err);

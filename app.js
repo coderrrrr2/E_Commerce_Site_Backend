@@ -30,7 +30,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
     User.findByPk(1)
     .then(user => {
-        console.log('User found:', user);
 
         req.user = user;
         next();
@@ -55,7 +54,7 @@ Product.belongsToMany(Cart, {through: CartItem});
 
 sequelize.
 sync()
-// sync('force :true')
+// sync({force :true})
 
 .then(result => { 
   
@@ -63,13 +62,12 @@ sync()
 
 }).then(user => {
     if(!user){
-        console.log("user not found");
+
 
        return  User.create({name: 'Max', email: 'test@rt.com', id: 1});
     }
     return user;
 }).then(user => {
-    // console.log('User found outside middleware:', user);
 
    return  user.createCart();
 
