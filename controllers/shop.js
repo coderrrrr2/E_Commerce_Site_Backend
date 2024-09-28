@@ -1,34 +1,34 @@
 const Product = require('../models/product');
 const Cart = require('../models/cart');
 
-exports.getProducts = async(req, res, next) => {
-try{
-  let data =  await  Product.findAll();
+exports.getProducts = async (req, res, next) => {
+  try {
+    let data = await Product.findAll();
 
-res.render('shop/product-list', {
-  prods: data,
-  pageTitle: 'All Products',
-  path: '/products'
-});
-}catch(err){
-  console.error(err);
-  res.status(500).send('Internal Server Error'); // Handle error appropriately
-}
+    res.render('shop/product-list', {
+      prods: data,
+      pageTitle: 'All Products',
+      path: '/products'
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error'); // Handle error appropriately
+  }
 
-    
+
 };
 
-exports.getProduct = async(req, res, next) => {
+exports.getProduct = async (req, res, next) => {
 
-  try{
+  try {
     const prodId = req.params.productId;
-  const result =  await Product.findByPk(prodId);
+    const result = await Product.findByPk(prodId);
 
-  res.render('shop/product-detail', {
-    product: result,
-    pageTitle: result.pageTitle,
-    path: '/products'
-  });
+    res.render('shop/product-detail', {
+      product: result,
+      pageTitle: result.pageTitle,
+      path: '/products'
+    });
   }
   catch (err) {
     console.error(err);
@@ -38,9 +38,9 @@ exports.getProduct = async(req, res, next) => {
 
 exports.getIndex = async (req, res, next) => {
   try {
-    const result = await Product.findAll(); 
+    const result = await Product.findAll();
     res.render('shop/index', {
-      prods: result, 
+      prods: result,
       pageTitle: 'Shop',
       path: '/'
     });
@@ -52,20 +52,20 @@ exports.getIndex = async (req, res, next) => {
 
 
 exports.getCart = (req, res, next) => {
-   req.user.getCart()
-.then(cart => {
-return cart.getProducts();
-}).then(cartProducts => {
-  res.render('shop/cart', {
-          path: '/cart',
-          pageTitle: 'Your Cart',
-          products: cartProducts
-        });
-  })
-.catch(err=>{
-  console.error(err);
-}); 
- // Cart.getCart(cart => {
+  req.user.getCart()
+    .then(cart => {
+      return cart.getProducts();
+    }).then(cartProducts => {
+      res.render('shop/cart', {
+        path: '/cart',
+        pageTitle: 'Your Cart',
+        products: cartProducts
+      });
+    })
+    .catch(err => {
+      console.error(err);
+    });
+  // Cart.getCart(cart => {
   //   Product.fetchAll(products => {
   //     const cartProducts = [];
   //     for (product of products) {
@@ -85,48 +85,56 @@ return cart.getProducts();
   // });
 };
 
-exports.postCart =  (req, res, next) => {
-try{
-  const prodId = req.body.productId;
-  var fetchedCart ;
-  let newQuantity = 1;
+exports.postCart = (req, res, next) => {
+  try {
+    const prodId = req.body.productId;
+    var fetchedCart;
+    let newQuantity = 1;
 
-req.user.getCart().then(cart => {
-  fetchedCart = cart;
-   
- return cart.getProducts({where: {id: prodId}});
-}).then(products => {
-let product;
-newQuantity = 1;
 
-if(products.length > 0){
-  product = products[0];
-}
-if(product){
-  ///
-}
-return Product.findByPk(prodId);
-}).then(product => {
- 
-  fetchedCart.addProduct(product, {through: {quantity: newQuantity}});
-  res.redirect('/cart');
+    req.user.getCart().then(cart => {
+      fetchedCart = cart;
 
-});
-}catch(err){
-  console.error(err);
-  res.status(500).send('Internal Server Error'); // Handle error appropriately
-}
+      return cart.getProducts({ where: { id: prodId } });
+    }).then(products => {
+      var product;
+
+      if (products.length > 0) {
+        product = products[0];
+      }
+
+
+      if (product) {
+        console.log('product found', product);  
+        const oldQuantity = product.cartItem.quantity;
+        newQuantity = oldQuantity + 1;
+        return product;
+
+      }
+      return Product.findByPk(prodId);
+    }).then(product => {
+      return fetchedCart.addProduct(product, { through: { quantity: newQuantity } });
+
+    }).then(() => {
+      res.redirect('/cart');
+    }
+  );
+  
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error'); // Handle error appropriately
+  }
 };
 
-exports.postCartDeleteProduct = async(req, res, next) => {
-try{
-  const prodId = req.body.productId;
+exports.postCartDeleteProduct = async (req, res, next) => {
+  try {
+    const prodId = req.body.productId;
 
-  res.redirect('/cart');
-}catch(err){
-  console.error(err);
-  res.status(500).send('Internal Server Error'); // Handle error appropriately
-}
+    res.redirect('/cart');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error'); // Handle error appropriately
+  }
 };
 
 exports.getOrders = (req, res, next) => {
