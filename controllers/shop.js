@@ -155,47 +155,50 @@ exports.getCheckout = (req, res, next) => {
 };
 
 exports.getOrders = (req, res, next) => {
-  try{
-    req.user.getOrders({include: ['products']}).then(orders => {
+  try {
+    req.user.getOrders({ include: ['products'] }).then(orders => {
       return res.render('shop/orders', {
         path: '/orders',
-        pageTitle: 'Your Orders'
+        pageTitle: 'Your Orders',
+        orders: orders
+
+
       });
     });
-    
-  }catch(err){
+
+  } catch (err) {
     console.log(err);
     res.status(500).send('Internal Server Error'); // Handle error appropriately
   }
 };
 
 exports.postOrder = (req, res, next) => {
-console.log("entered this controller");
+  console.log("entered this controller");
   try {
     let fetchedCart;
     const prodId = req.body.productId;
 
     req.user.getCart(
 
-     
-    ).then( (cart) => {
+
+    ).then((cart) => {
       fetchedCart = cart;
-      console.log(cart.getProducts(),"cart products");
+      console.log(cart.getProducts(), "cart products");
       return cart.getProducts();
     }).
-    then(products => {
-      console.log("products array",products);
-      return req.user.createOrder().then(order => {
-        return order.addProducts(products.map(product => {
-          product.orderItem = { quantity: product.cartItem.quantity };
-          return product;
-        }));
-      });
+      then(products => {
+        console.log("products array", products);
+        return req.user.createOrder().then(order => {
+          return order.addProducts(products.map(product => {
+            product.orderItem = { quantity: product.cartItem.quantity };
+            return product;
+          }));
+        });
 
 
-    }).then(result => {
-      fetchedCart.setProducts(null);
-    }).
+      }).then(result => {
+        fetchedCart.setProducts(null);
+      }).
       then(result => {
         console.log('Order Created and redirected');
         res.redirect('/orders');
