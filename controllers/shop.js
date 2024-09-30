@@ -1,5 +1,5 @@
+const { where } = require('sequelize');
 const Product = require('../models/product');
-const Cart = require('../models/cart');
 
 exports.getProducts = async (req, res, next) => {
   try {
@@ -105,7 +105,7 @@ exports.postCart = (req, res, next) => {
 
 
       if (product) {
-        console.log('product found', product);  
+
         const oldQuantity = product.cartItem.quantity;
         newQuantity = oldQuantity + 1;
         return product;
@@ -118,8 +118,8 @@ exports.postCart = (req, res, next) => {
     }).then(() => {
       res.redirect('/cart');
     }
-  );
-  
+    );
+
   } catch (err) {
     console.error(err);
     res.status(500).send('Internal Server Error'); // Handle error appropriately
@@ -129,20 +129,23 @@ exports.postCart = (req, res, next) => {
 exports.postCartDeleteProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
+    req.user.getCart().then(cart => {
+      return cart.getProducts({ where: { id: prodId } });
+    }).then(products => {
+      const product = products[0];
+      return product.cartItem.destroy();
+    }).then(result => {
+      res.redirect('/cart');
+    });
 
-    res.redirect('/cart');
+
   } catch (err) {
     console.error(err);
     res.status(500).send('Internal Server Error'); // Handle error appropriately
   }
 };
 
-exports.getOrders = (req, res, next) => {
-  res.render('shop/orders', {
-    path: '/orders',
-    pageTitle: 'Your Orders'
-  });
-};
+
 
 exports.getCheckout = (req, res, next) => {
   res.render('shop/checkout', {
@@ -150,3 +153,57 @@ exports.getCheckout = (req, res, next) => {
     pageTitle: 'Checkout'
   });
 };
+
+exports.getOrders = (req, res, next) => {
+  try{
+    req.user.getOrders({include: ['products']}).then(orders => {
+      return res.render('shop/orders', {
+        path: '/orders',
+        pageTitle: 'Your Orders'
+      });
+    });
+    
+  }catch(err){
+    console.log(err);
+    res.status(500).send('Internal Server Error'); // Handle error appropriately
+  }
+};
+
+exports.postOrder = (req, res, next) => {
+console.log("entered this controller");
+  try {
+    let fetchedCart;
+    const prodId = req.body.productId;
+
+    req.user.getCart(
+
+     
+    ).then( (cart) => {
+      fetchedCart = cart;
+      console.log(cart.getProducts(),"cart products");
+      return cart.getProducts();
+    }).
+    then(products => {
+      console.log("products array",products);
+      return req.user.createOrder().then(order => {
+        return order.addProducts(products.map(product => {
+          product.orderItem = { quantity: product.cartItem.quantity };
+          return product;
+        }));
+      });
+
+
+    }).then(result => {
+      fetchedCart.setProducts(null);
+    }).
+      then(result => {
+        console.log('Order Created and redirected');
+        res.redirect('/orders');
+      });
+
+  }
+  catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error'); // Handle error appropriately
+  }
+}
