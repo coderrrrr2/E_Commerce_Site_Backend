@@ -69,8 +69,7 @@ sync()
 }).then(user => {
     if(!user){
 
-
-       return  User.create({name: 'Max', email: 'test@rt.com', id: 1});
+ return  User.create({name: 'Max', email: 'test@rt.com', id: 1});
     }
     return user;
 }).then(user => {
