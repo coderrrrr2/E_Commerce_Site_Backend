@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 
 const errorController = require('./controllers/error');
 const sequelize = require('./util/database');
+const session = require('express-session');
 const Product = require('./models/product');
 const User = require('./models/user');
 const Cart = require('./models/cart');
@@ -30,19 +31,31 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-    User.findByPk(1)
-    .then(user => {
+    res.locals.isAuthenticated = req.isAuthenticated ? req.isAuthenticated() : false;
+    next();
+});
 
+app.use(session({secret : 'my secret', resave: false, saveUninitialized: false}));
+
+app.use((req, res, next) => {
+    if (!req.session.user) {
+      return next();
+    }
+    User.findById(req.session.user._id)
+      .then(user => {
         req.user = user;
         next();
-    })
-    .catch(err => console.log(err));
-});
+      })
+      .catch(err => console.log(err));
+  });
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 
 app.use(errorController.get404);
+
+
+
 
 
 
