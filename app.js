@@ -1,11 +1,11 @@
 const path = require('path');
-
 const express = require('express');
 const bodyParser = require('body-parser');
-
 const errorController = require('./controllers/error');
 const sequelize = require('./util/database');
 const session = require('express-session');
+
+
 const Product = require('./models/product');
 const User = require('./models/user');
 const Cart = require('./models/cart');
@@ -30,24 +30,26 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false }));
+
+
 app.use((req, res, next) => {
-    res.locals.isAuthenticated = req.isAuthenticated ? req.isAuthenticated() : false;
-    next();
+  res.locals.isAuthenticated = req.isAuthenticated ? req.isAuthenticated() : false;
+  next();
 });
 
-app.use(session({secret : 'my secret', resave: false, saveUninitialized: false}));
 
 app.use((req, res, next) => {
-    if (!req.session.user) {
-      return next();
-    }
-    User.findById(req.session.user._id)
-      .then(user => {
-        req.user = user;
-        next();
-      })
-      .catch(err => console.log(err));
-  });
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
+    .then(user => {
+      req.user = user;
+      next();
+    })
+    .catch(err => console.log(err));
+});
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
@@ -60,40 +62,41 @@ app.use(errorController.get404);
 
 
 
-Product.belongsTo(User,{constraints: true, onDelete: 'CASCADE'});
-User.hasMany(Product); 
+Product.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
+User.hasMany(Product);
 User.hasOne(Cart);
 Cart.belongsTo(User);
-Cart.belongsToMany(Product, {through: CartItem});
-Product.belongsToMany(Cart, {through: CartItem});
+Cart.belongsToMany(Product, { through: CartItem });
+Product.belongsToMany(Cart, { through: CartItem });
 Order.belongsTo(User);
 User.hasMany(Order);
-Order.belongsToMany(Product, {through: OrderItem});
+Order.belongsToMany(Product, { through: OrderItem });
 
 
 sequelize.
-sync()
-// sync({force :true})
+  sync()
+  // sync({force :true})
 
-.then(result => { 
-  
-   return User.findByPk(1); 
+  .then(result => {
 
-}).then(user => {
-    if(!user){
+    return User.findByPk(1);
 
- return  User.create({name: 'Max', email: 'test@rt.com', id: 1});
+  }).then(user => {
+    if (!user) {
+
+      return User.create({ name: 'Max', email: 'test@rt.com', id: 1 });
     }
     return user;
-}).then(user => {
+  }).then(user => {
 
-   return  user.createCart();
+    return user.createCart();
 
-}).then(cart => {
+  }).then(cart => {
+
     app.listen(3000);
 
-})
-.catch(err => {
+  })
+  .catch(err => {
     console.log(err);
-});
+  });
 
