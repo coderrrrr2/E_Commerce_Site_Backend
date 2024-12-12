@@ -52,7 +52,7 @@ exports.getIndex = async (req, res, next) => {
 
 
 exports.getCart = (req, res, next) => {
-  req.user.getCart()
+  req.session.user.getCart()
     .then(cart => {
       return cart.getProducts();
     }).then(cartProducts => {
@@ -92,7 +92,7 @@ exports.postCart = (req, res, next) => {
     let newQuantity = 1;
 
 
-    req.user.getCart().then(cart => {
+    req.session.user.getCart().then(cart => {
       fetchedCart = cart;
 
       return cart.getProducts({ where: { id: prodId } });
@@ -129,7 +129,7 @@ exports.postCart = (req, res, next) => {
 exports.postCartDeleteProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
-    req.user.getCart().then(cart => {
+    req.session.user.getCart().then(cart => {
       return cart.getProducts({ where: { id: prodId } });
     }).then(products => {
       const product = products[0];
@@ -156,7 +156,7 @@ exports.getCheckout = (req, res, next) => {
 
 exports.getOrders = (req, res, next) => {
   try {
-    req.user.getOrders({ include: ['products'] }).then(orders => {
+    req.session.user.getOrders({ include: ['products'] }).then(orders => {
       return res.render('shop/orders', {
         path: '/orders',
         pageTitle: 'Your Orders',
@@ -178,7 +178,7 @@ exports.postOrder = (req, res, next) => {
     let fetchedCart;
     const prodId = req.body.productId;
 
-    req.user.getCart(
+    req.session.user.getCart(
 
 
     ).then((cart) => {
@@ -188,7 +188,7 @@ exports.postOrder = (req, res, next) => {
     }).
       then(products => {
         console.log("products array", products);
-        return req.user.createOrder().then(order => {
+        return req.session.user.createOrder().then(order => {
           return order.addProducts(products.map(product => {
             product.orderItem = { quantity: product.cartItem.quantity };
             return product;

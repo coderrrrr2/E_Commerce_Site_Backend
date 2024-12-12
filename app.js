@@ -4,24 +4,18 @@ const bodyParser = require('body-parser');
 const errorController = require('./controllers/error');
 const sequelize = require('./util/database');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+const pg = require('pg');
 
-
-const Product = require('./models/product');
-const User = require('./models/user');
-const Cart = require('./models/cart');
-const CartItem = require('./models/cart_item');
-const Order = require('./models/order');
-const OrderItem = require('./models/order_item');
-
+const adminRoutes = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
 
 
 const app = express();
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
-
-const adminRoutes = require('./routes/admin');
-const shopRoutes = require('./routes/shop');
 
 
 
@@ -30,7 +24,32 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false }));
+const pgPool = new pg.Pool({
+  database: 'adebayophilip',
+  user: 'adebayophilip',
+  password: 'password',
+  host: 'localhost',
+  port: 5432, // Default PostgreSQL port
+});
+
+// Session middleware
+app.use(
+  session({
+    store: new pgSession({
+      pool: pgPool, // Connection pool
+      tableName: 'session', // Optional: Customize table name (default is "session")
+    }),
+    secret: 'dfjdkjfdjfldjflkdjf', // Use a secure, random secret
+    // resave: false, // Don't save session if unmodified
+    // saveUninitialized: false, // Don't create session until something is stored
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+      // secure: false, // Set to true if using HTTPS
+      // httpOnly: true, // Prevent client-side JavaScript access
+    },
+  })
+);
+// app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false }));
 
 
 app.use((req, res, next) => {
@@ -39,25 +58,22 @@ app.use((req, res, next) => {
 });
 
 
-app.use((req, res, next) => {
-  if (!req.session.user) {
-    return next();
-  }
-  User.findById(req.session.user._id)
-    .then(user => {
-      req.user = user;
-      next();
-    })
-    .catch(err => console.log(err));
-});
+
+
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
 app.use(errorController.get404);
 
 
-
+const Product = require('./models/product');
+const User = require('./models/user');
+const Cart = require('./models/cart');
+const CartItem = require('./models/cart_item');
+const Order = require('./models/order');
+const OrderItem = require('./models/order_item');
 
 
 

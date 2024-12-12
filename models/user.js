@@ -17,6 +17,7 @@ const user = sequelize.define('user', {
         type: Sequelize.STRING,
         allowNull: false
     },
+    
     // orders: {
     //     type: Sequelize.ARRAY,
     //     allowNull: false
