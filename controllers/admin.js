@@ -4,7 +4,8 @@ exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
-    editing: false
+    editing: false,
+    isAuthenticated: req.session.isLoggedIn
   });
 };
 
@@ -15,7 +16,7 @@ exports.postAddProduct = async(req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  await req.session.user.createProduct
+  await req.user.createProduct
    ({
 
     title: title,
@@ -47,13 +48,17 @@ res.render('admin/edit-product', {
   pageTitle: 'Edit Product',
   path: '/admin/edit-product',
   editing: editMode,
-  product: product
+  product: product,
+  isAuthenticated: req.session.isLoggedIn
+
 });
 };
 
 
 
 exports.postEditProduct = async(req, res, next) => {
+
+
 try{
   const prodId = req.body.productId;
   const updatedTitle = req.body.title;
@@ -65,8 +70,10 @@ try{
   product.price = updatedPrice;
   product.imageUrl = updatedImageUrl;
   product.description = updatedDesc;
-  product.save();
-  res.redirect('/admin/products');
+  await product.save();
+  console.log("redirecting to products");
+
+  res.redirecting('/admin/products');
 }catch(err){
   console.error(err);
   res.status(500).send('Internal Server Error');
@@ -77,11 +84,13 @@ try{
 
 exports.getProducts = async(req, res, next) => {
 try{
+  console.log("trying to get products");
   const products = await  Product.findAll();
   res.render('admin/products', {
-    prods: products,
+    prods: products || [], 
     pageTitle: 'Admin Products',
-    path: '/admin/products'
+    path: '/admin/products',
+    isAuthenticated: req.session.isLoggedIn
   });
 }catch(err){
   console.error(err);

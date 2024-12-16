@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 const errorController = require('./controllers/error');
 const sequelize = require('./util/database');
 const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session);
 const pg = require('pg');
+
 
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
@@ -18,44 +18,62 @@ app.set('view engine', 'ejs');
 app.set('views', 'views');
 
 
-
 app.use(bodyParser.urlencoded({ extended: false }));
 
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const pgPool = new pg.Pool({
+const pgSession = require('connect-pg-simple')(session);
+
+
+const poolConfigOpts = {
   database: 'adebayophilip',
   user: 'adebayophilip',
   password: 'password',
   host: 'localhost',
-  port: 5432, // Default PostgreSQL port
-});
+  port: 5432
+}
+const poolInstance = new pg.Pool(poolConfigOpts);
 
-// Session middleware
-app.use(
-  session({
-    store: new pgSession({
-      pool: pgPool, // Connection pool
-      tableName: 'session', // Optional: Customize table name (default is "session")
-    }),
-    secret: 'dfjdkjfdjfldjflkdjf', // Use a secure, random secret
-    // resave: false, // Don't save session if unmodified
-    // saveUninitialized: false, // Don't create session until something is stored
-    cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-      // secure: false, // Set to true if using HTTPS
-      // httpOnly: true, // Prevent client-side JavaScript access
-    },
-  })
-);
+const postgreStore = new pgSession({
+  pool: poolInstance,
+  createTableIfMissing: true
+})
+
+
+app.use(session({
+    store: postgreStore,
+    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
+    secret: 'secret',
+    resave: true,
+    saveUninitialized:true
+}));
+
 // app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false }));
 
 
+
+
 app.use((req, res, next) => {
-  res.locals.isAuthenticated = req.isAuthenticated ? req.isAuthenticated() : false;
-  next();
+
+
+  if (!req.session.user) {
+    console.log('no user');
+     next();
+  }
+  User.findByPk(req.session.user.id)
+    .then(user => {
+
+      req.user = user;
+      next();
+
+    })
 });
+
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn || false; // Default to false if not set
+  next();
+})
 
 
 

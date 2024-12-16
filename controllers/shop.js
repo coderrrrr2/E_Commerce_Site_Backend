@@ -9,6 +9,8 @@ exports.getProducts = async (req, res, next) => {
       prods: data,
       pageTitle: 'All Products',
       path: '/products'
+      ,
+      isAuthenticated: req.session.isLoggedIn
     });
   } catch (err) {
     console.error(err);
@@ -27,7 +29,9 @@ exports.getProduct = async (req, res, next) => {
     res.render('shop/product-detail', {
       product: result,
       pageTitle: result.pageTitle,
-      path: '/products'
+      path: '/products',
+      isAuthenticated: req.session.isLoggedIn
+
     });
   }
   catch (err) {
@@ -43,6 +47,8 @@ exports.getIndex = async (req, res, next) => {
       prods: result,
       pageTitle: 'Shop',
       path: '/'
+      ,
+      isAuthenticated: req.session.isLoggedIn
     });
   } catch (err) {
     console.error(err);
@@ -52,7 +58,7 @@ exports.getIndex = async (req, res, next) => {
 
 
 exports.getCart = (req, res, next) => {
-  req.session.user.getCart()
+  req.user.getCart()
     .then(cart => {
       return cart.getProducts();
     }).then(cartProducts => {
@@ -60,7 +66,10 @@ exports.getCart = (req, res, next) => {
         path: '/cart',
         pageTitle: 'Your Cart',
         products: cartProducts
+        ,
+        isAuthenticated: req.session.isLoggedIn
       });
+
     })
     .catch(err => {
       console.error(err);
@@ -85,6 +94,27 @@ exports.getCart = (req, res, next) => {
   // });
 };
 
+// exports.getCart = (req, res, next) => {
+//   const userId = req.user.id;
+
+//   User.findByPk(userId)
+//     .then(user => {
+//       return user.getCart();
+//     })
+//     .then(cart => {
+//       return cart.getProducts();
+//     })
+//     .then(products => {
+//       res.render('shop/cart', {
+//         path: '/cart',
+//         pageTitle: 'Your Cart',
+//         products: products,
+//       });
+//     })
+//     .catch(err => console.error(err));
+// };
+
+
 exports.postCart = (req, res, next) => {
   try {
     const prodId = req.body.productId;
@@ -92,7 +122,7 @@ exports.postCart = (req, res, next) => {
     let newQuantity = 1;
 
 
-    req.session.user.getCart().then(cart => {
+    req.user.getCart().then(cart => {
       fetchedCart = cart;
 
       return cart.getProducts({ where: { id: prodId } });
@@ -129,7 +159,7 @@ exports.postCart = (req, res, next) => {
 exports.postCartDeleteProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
-    req.session.user.getCart().then(cart => {
+    req.user.getCart().then(cart => {
       return cart.getProducts({ where: { id: prodId } });
     }).then(products => {
       const product = products[0];
@@ -151,16 +181,20 @@ exports.getCheckout = (req, res, next) => {
   res.render('shop/checkout', {
     path: '/checkout',
     pageTitle: 'Checkout'
+    ,
+    isAuthenticated: req.session.isLoggedIn
   });
 };
 
 exports.getOrders = (req, res, next) => {
   try {
-    req.session.user.getOrders({ include: ['products'] }).then(orders => {
+    req.user.getOrders({ include: ['products'] }).then(orders => {
       return res.render('shop/orders', {
         path: '/orders',
         pageTitle: 'Your Orders',
         orders: orders
+        ,
+        isAuthenticated: req.session.isLoggedIn
 
 
       });
@@ -178,7 +212,7 @@ exports.postOrder = (req, res, next) => {
     let fetchedCart;
     const prodId = req.body.productId;
 
-    req.session.user.getCart(
+    req.user.getCart(
 
 
     ).then((cart) => {
@@ -188,7 +222,7 @@ exports.postOrder = (req, res, next) => {
     }).
       then(products => {
         console.log("products array", products);
-        return req.session.user.createOrder().then(order => {
+        return req.user.createOrder().then(order => {
           return order.addProducts(products.map(product => {
             product.orderItem = { quantity: product.cartItem.quantity };
             return product;
