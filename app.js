@@ -5,6 +5,8 @@ const errorController = require('./controllers/error');
 const sequelize = require('./util/database');
 const session = require('express-session');
 const pg = require('pg');
+require('dotenv').config();
+
 
 
 const adminRoutes = require('./routes/admin');
@@ -27,12 +29,13 @@ const pgSession = require('connect-pg-simple')(session);
 
 
 const poolConfigOpts = {
-  database: 'adebayophilip',
-  user: 'adebayophilip',
-  password: 'password',
-  host: 'localhost',
-  port: 5432
-}
+  database: process.env.DB_DATABASE,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT, 10), // Convert port to a number
+};
+
 const poolInstance = new pg.Pool(poolConfigOpts);
 
 const postgreStore = new pgSession({
