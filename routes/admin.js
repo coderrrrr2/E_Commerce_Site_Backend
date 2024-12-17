@@ -15,11 +15,13 @@ router.get('/add-product', adminController.getAddProduct);
 // /admin/products => GET
 
 // /admin/add-product => POST
+
+router.get('/edit-product', adminController.getEditProduct);
+
 router.post('/add-product', adminController.postAddProduct);
 
-router.get('/edit-product/:productId', adminController.getEditProduct);
+router.post('/edit-product/:productId', adminController.postEditProduct);
 
-router.post('/edit-product', adminController.postEditProduct);
 
 router.post('/delete-product', adminController.postDeleteProduct);
 

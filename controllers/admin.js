@@ -35,28 +35,34 @@ exports.postAddProduct = async(req, res, next) => {
 
 exports.getEditProduct = async(req, res, next) => {
   const editMode = req.query.edit;
+  
   if (!editMode) {
     return res.redirect('/');
   }
   const prodId = req.params.productId;
- const product = await  Product.findByPk(prodId);
 
- if (!product) {
-  return res.redirect('/');
-}
-res.render('admin/edit-product', {
-  pageTitle: 'Edit Product',
-  path: '/admin/edit-product',
-  editing: editMode,
-  product: product,
-  isAuthenticated: req.session.isLoggedIn
+  Product.findByPk(prodId)
+    .then(product => {
+      if (!product) {
+        console.log("redirecting to products");
 
-});
+        return res.redirect('/');
+      }
+      res.render('admin/edit-product', {
+        pageTitle: 'Edit Product',
+        path: '/admin/edit-product',
+        editing: editMode,
+        product: product,
+        isAuthenticated: req.session.isLoggedIn
+      });
+    })
+    .catch(err => console.log(err));
 };
 
 
 
 exports.postEditProduct = async(req, res, next) => {
+  console.log("get edit products");
 
 
 try{
@@ -73,7 +79,7 @@ try{
   await product.save();
   console.log("redirecting to products");
 
-  res.redirecting('/admin/products');
+  res.redirect('/admin/products');
 }catch(err){
   console.error(err);
   res.status(500).send('Internal Server Error');
