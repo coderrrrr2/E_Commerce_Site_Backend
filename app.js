@@ -55,16 +55,13 @@ app.use(session({
 // app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false }));
 
 
-
-
 app.use((req, res, next) => {
 
-
   if (!req.session.user) {
-    console.log('no user');
-     next();
+    return next();
   }
-  User.findByPk(req.session.user.id)
+
+  User.findByPk(req.session.user._id)
     .then(user => {
 
       req.user = user;
@@ -77,8 +74,6 @@ app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn || false; // Default to false if not set
   next();
 })
-
-
 
 
 
@@ -115,20 +110,6 @@ sequelize.
   // sync({force :true})
 
   .then(result => {
-
-    return User.findByPk(1);
-
-  }).then(user => {
-    if (!user) {
-
-      return User.create({ name: 'Max', email: 'test@rt.com', id: 1 });
-    }
-    return user;
-  }).then(user => {
-
-    return user.createCart();
-
-  }).then(cart => {
 
     app.listen(3000);
 
