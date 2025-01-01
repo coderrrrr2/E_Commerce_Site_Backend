@@ -5,7 +5,13 @@ const errorController = require('./controllers/error');
 const sequelize = require('./util/database');
 const session = require('express-session');
 const pg = require('pg');
+const colorLog = require('./util/custom_log');
+const csrf = require('csurf');
+
 require('dotenv').config();
+
+
+const csrfProtection = csrf();
 
 
 
@@ -48,9 +54,11 @@ app.use(session({
     store: postgreStore,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
     secret: 'secret',
-    resave: true,
-    saveUninitialized:true
+    resave: false,
+    saveUninitialized:false
 }));
+
+app.use(csrfProtection);
 
 // app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false }));
 
@@ -60,6 +68,7 @@ app.use((req, res, next) => {
   if (!req.session.user) {
     return next();
   }
+
 
   User.findByPk(req.session.user._id)
     .then(user => {
@@ -71,9 +80,12 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
+  res.locals.csrfToken = req.csrfToken();
+colorLog("token is set");
   res.locals.isAuthenticated = req.session.isLoggedIn || false; // Default to false if not set
   next();
 })
+
 
 
 

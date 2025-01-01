@@ -1,6 +1,7 @@
 const Product = require('../models/product');
 
 exports.getAddProduct = (req, res, next) => {
+ 
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
@@ -16,9 +17,9 @@ exports.postAddProduct = async(req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
+
   await req.user.createProduct
    ({
-
     title: title,
     price: price,
     imageUrl: imageUrl,
@@ -97,6 +98,7 @@ try{
     pageTitle: 'Admin Products',
     path: '/admin/products',
     isAuthenticated: req.session.isLoggedIn
+    
   });
 }catch(err){
   console.error(err);

@@ -1,6 +1,8 @@
 const { name } = require('ejs');
 const User = require('../models/user');
 const bycrypt = require('bcryptjs');
+const colorLog = require('../util/custom_log');
+
 
 exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
@@ -9,6 +11,7 @@ exports.getLogin = (req, res, next) => {
     isAuthenticated: false
   });
 };
+
 
 exports.getSignUp= (req, res, next) => {
   res.render('auth/signUp', {
@@ -29,11 +32,13 @@ User.findOne(  {where: { email: email }}
     return res.redirect('/signUp');
   }
   const hashedPassword = await  bycrypt.hash(password, 12);
-    User.create({
+    User.create( 
+      {
       name: 'test',
       email: email,
       password: hashedPassword
-    }).then(result => {
+    }
+  ).then(result => {
       result.save();
       console.log('User Created');
       res.redirect('/login');
@@ -58,6 +63,8 @@ exports.postLogin = (req, res, next) => {
             req.session.isLoggedIn = true;
             req.session.user = user;
             return req.session.save(err => {
+              colorLog("session saved");
+
               res.redirect('/');
             });
           }

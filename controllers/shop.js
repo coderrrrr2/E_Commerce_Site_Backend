@@ -30,7 +30,6 @@ exports.getProduct = async (req, res, next) => {
       product: result,
       pageTitle: result.pageTitle,
       path: '/products',
-      isAuthenticated: req.session.isLoggedIn
 
     });
   }
@@ -46,9 +45,7 @@ exports.getIndex = async (req, res, next) => {
     res.render('shop/index', {
       prods: result,
       pageTitle: 'Shop',
-      path: '/'
-      ,
-      isAuthenticated: req.session.isLoggedIn
+      path: '/',
     });
   } catch (err) {
     console.error(err);
